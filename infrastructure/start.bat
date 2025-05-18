@@ -9,9 +9,13 @@ if not exist ".env.feats" (
     echo El archivo .env.feats no existe.
     exit /b 1
 )
+if not exist ".env.front" (
+    echo El archivo .env.front no existe.
+    exit /b 1
+)
 
 :: Concatenar los archivos .env
-type .env.back .env.feats > .env
+type .env.back .env.front .env.feats > .env
 
 :: Ejecutar docker compose con el .env creado
 docker-compose --env-file .env up --build -d

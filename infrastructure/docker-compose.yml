@@ -1,13 +1,14 @@
 #################################################
-# DOCKER COMPOSE FILE FOR EASY MARKET BACKEND
-# 
-# Usage:
-#   start:      doppler run -- docker-compose up --build -d
-#   stop:       docker-compose down
+# DOCKER COMPOSE FILE FOR EASY MARKET PLATFORM  #
+# Backend + Flutter Web frontend                #
 #################################################
 
+version: "3.9"
+
 services:
-  # EUREKA DISCOVERY SERVER
+#========================
+#  DISCOVERY (Eureka)
+#========================
   discovery:
     image: discovery
     build:
@@ -23,7 +24,9 @@ services:
       timeout: 10s
       retries: 3
 
-  # POSTGRESQL DATABASE - with initial db creation script
+#========================
+#  DATABASE
+#========================
   postgres:
     image: postgres:16-alpine
     container_name: postgres
@@ -45,7 +48,9 @@ services:
       timeout: 5s
       retries: 5
 
-  # CONFIG SERVER - configures the services with git repository
+#========================
+#  CONFIG SERVER
+#========================
   config-server:
     image: config-server
     build:
@@ -68,8 +73,10 @@ services:
       interval: 10s
       timeout: 10s
       retries: 3
-    
-  # API GATEWAY - routes requests to the appropriate service
+
+#========================
+#  API GATEWAY
+#========================
   api-gateway:
     image: api-gateway
     build:
@@ -92,10 +99,9 @@ services:
       timeout: 10s
       retries: 3
 
-  ###################
-  # BACKEND SERVICES
-  ###################
-  # USERS SERVICE - manages user accounts
+#========================
+#  BACKEND MICROSERVICES
+#========================
   users-service:
     image: users-service
     build:
@@ -124,7 +130,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # PRODUCTS SERVICE - manages product listings
   products-service:
     image: products-service
     build:
@@ -153,7 +158,6 @@ services:
       timeout: 10s
       retries: 3
   
-  # ORDERS SERVICE - manages customer orders
   orders-service:
     image: orders-service
     build:
@@ -182,8 +186,6 @@ services:
       timeout: 10s
       retries: 3
   
-  # REVIEWS SERVICE - manages product reviews
-    # REVIEWS SERVICE - manages product reviews
   reviews-service:
     image: reviews-service
     build:
@@ -215,8 +217,48 @@ services:
     command: >
       /bin/bash -c 'if [ "$RATINGS_ENABLED" = "true" ]; then java -jar /app/app.jar; else echo "Ratings service is disabled."; fi'
 
+#========================
+#  FRONTEND  (Flutter Web)
+#========================
+  frontend-web:
+    build:
+      context: https://github.com/Easy-Market-SPL/spl-front.git
+      dockerfile: Dockerfile
+      args:
+        ANDROID_CLIENT_ID:           "${ANDROID_CLIENT_ID}"
+        API_HOST:                    "${API_HOST}"
+        BASE_GOOGLE_PLACES_URL:      "${BASE_GOOGLE_PLACES_URL}"
+        IOS_CLIENT_ID:               "${IOS_CLIENT_ID}"
+        MAPS_API_KEY:                "${MAPS_API_KEY}"
+        STRIPE_PAYMENT_API_URL:      "${STRIPE_PAYMENT_API_URL}"
+        STRIPE_PUBLIC_KEY:           "${STRIPE_PUBLIC_KEY}"
+        STRIPE_SECRET_KEY:           "${STRIPE_SECRET_KEY}"
+        SUPABASE_ANON_KEY:           "${SUPABASE_ANON_KEY}"
+        SUPABASE_SERVICE_ROLE_KEY:   "${SUPABASE_SERVICE_ROLE_KEY}"
+        SUPABASE_URL:                "${SUPABASE_URL}"
+        WEB_CLIENT_ID:               "${WEB_CLIENT_ID}"
+        RATINGS_ENABLED:             "${RATINGS_ENABLED}"
+        CHAT_ENABLED:                "${CHAT_ENABLED}"
+        THIRD_AUTH_ENABLED:          "${THIRD_AUTH_ENABLED}"
+        REALTIME_TRACKING_ENABLED:   "${REALTIME_TRACKING_ENABLED}"
+        CASH_ENABLED:                "${CASH_ENABLED}"
+        CREDIT_CARD_ENABLED:         "${CREDIT_CARD_ENABLED}"
+    ports:
+      - "8001:8001"
+    networks:
+      - default
+    env_file:
+      - .env
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+
+#========================
+#  NETWORKS & VOLUMES
+#========================
 networks:
   default:
     name: easy-market
+
 volumes:
   postgres_data:
