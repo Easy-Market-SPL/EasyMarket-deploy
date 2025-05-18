@@ -1,0 +1,56 @@
+Levantar supabase
+
+-------------------------------------
+Desactivar RLS y crear tablas nuevas
+-------------------------------------
+CREATE TABLE delivery_tracking (
+    user_id VARCHAR PRIMARY KEY,
+    latitude NUMERIC,
+    longitude NUMERIC
+);
+
+CREATE TABLE chat_messages (
+    message_id BIGINT PRIMARY KEY,
+    chat_id VARCHAR,
+    sender_type VARCHAR,
+    message TEXT,
+    message_type VARCHAR,
+    file_url TEXT,
+    created_at TIMESTAMPTZ
+);
+
+CREATE TABLE chats (
+    chat_id VARCHAR PRIMARY KEY,
+    customer_name VARCHAR,
+    sender VARCHAR,
+    last_message TEXT,
+    last_message_time VARCHAR,
+    last_message_date VARCHAR,
+    created_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ
+);
+
+ALTER TABLE delivery_tracking DISABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_messages DISABLE ROW LEVEL SECURITY;
+ALTER TABLE chats DISABLE ROW LEVEL SECURITY;
+
+ALTER TABLE storage.buckets DISABLE ROW LEVEL SECURITY;
+ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY;
+
+
+-------------------------------------
+Crear Buckets
+-------------------------------------
+curl -X POST 'https://localhost:8000/storage/v1/bucket' \
+  -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"images","public":true}'
+
+curl -X POST 'https://localhost:8000/storage/v1/bucket' \
+  -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"chat","public":true}'
+
+-------------------------------------
+Crear tablas adicionales
+-------------------------------------

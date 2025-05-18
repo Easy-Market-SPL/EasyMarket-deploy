@@ -1,0 +1,219 @@
+#################################################
+# DOCKER COMPOSE FILE FOR EASY MARKET BACKEND
+# 
+# Usage:
+#   start:      doppler run -- docker-compose up --build -d
+#   stop:       docker-compose down
+#################################################
+
+services:
+  # EUREKA DISCOVERY SERVER
+  discovery:
+    image: discovery
+    build:
+      context: https://github.com/Easy-Market-SPL/discovery-service.git
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  # POSTGRESQL DATABASE - with initial db creation script
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init/:/docker-entrypoint-initdb.d/:ro
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # CONFIG SERVER - configures the services with git repository
+  config-server:
+    image: config-server
+    build:
+      context: https://github.com/Easy-Market-SPL/config-server.git
+      dockerfile: Dockerfile.prod
+    ports:
+      - "8888:8888"
+    networks:
+      - default
+    environment:
+      - EUREKA_URL=${EUREKA_URL}
+      - GH_CONFIG_PAT=${GH_CONFIG_PAT}
+      - GH_CONFIG_URI=${GH_CONFIG_URI}
+      - GH_CONFIG_USERNAME=${GH_CONFIG_USERNAME}
+    depends_on:
+      discovery:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    
+  # API GATEWAY - routes requests to the appropriate service
+  api-gateway:
+    image: api-gateway
+    build:
+      context: https://github.com/Easy-Market-SPL/api-gateway.git
+      dockerfile: Dockerfile.prod
+    ports:
+      - "8080:8080"
+    networks:
+      - default
+    environment:
+      - EUREKA_URL=${EUREKA_URL}
+    depends_on:
+      discovery:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  ###################
+  # BACKEND SERVICES
+  ###################
+  # USERS SERVICE - manages user accounts
+  users-service:
+    image: users-service
+    build:
+      context: https://github.com/Easy-Market-SPL/users-service.git
+      dockerfile: Dockerfile.prod
+    ports:
+      - "8081:8081"
+    networks:
+      - default
+    environment:
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_URL=${DB_URL}
+      - EUREKA_URL=${EUREKA_URL}
+      - SPRING_CONFIG_IMPORT=${SPRING_CONFIG_IMPORT}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - FEAT_NOTIFICATIONS=${FEAT_NOTIFICATIONS}
+    depends_on:
+      discovery:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  # PRODUCTS SERVICE - manages product listings
+  products-service:
+    image: products-service
+    build:
+      context: https://github.com/Easy-Market-SPL/products-service.git
+      dockerfile: Dockerfile.prod
+    ports:
+      - "8082:8082"
+    networks:
+      - default
+    environment:
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_URL=${DB_URL}
+      - EUREKA_URL=${EUREKA_URL}
+      - SPRING_CONFIG_IMPORT=${SPRING_CONFIG_IMPORT}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - FEAT_NOTIFICATIONS=${FEAT_NOTIFICATIONS}
+    depends_on:
+      discovery:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+  
+  # ORDERS SERVICE - manages customer orders
+  orders-service:
+    image: orders-service
+    build:
+      context: https://github.com/Easy-Market-SPL/orders-service.git
+      dockerfile: Dockerfile.prod
+    ports:
+      - "8083:8083"
+    networks:
+      - default
+    environment:
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_URL=${DB_URL}
+      - EUREKA_URL=${EUREKA_URL}
+      - SPRING_CONFIG_IMPORT=${SPRING_CONFIG_IMPORT}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - FEAT_NOTIFICATIONS=${FEAT_NOTIFICATIONS}
+    depends_on:
+      discovery:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+  
+  # REVIEWS SERVICE - manages product reviews
+  reviews-service:
+    image: reviews-service
+    build:
+      context: https://github.com/Easy-Market-SPL/reviews-service.git
+      dockerfile: Dockerfile.prod
+    ports:
+      - "8084:8084"
+    networks:
+      - default
+    environment:
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_URL=${DB_URL}
+      - EUREKA_URL=${EUREKA_URL}
+      - SPRING_CONFIG_IMPORT=${SPRING_CONFIG_IMPORT}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - FEAT_NOTIFICATIONS=${FEAT_NOTIFICATIONS}
+    depends_on:
+      discovery:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+
+networks:
+  default:
+    name: easy-market
+volumes:
+  postgres_data:
