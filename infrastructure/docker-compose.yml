@@ -183,6 +183,7 @@ services:
       retries: 3
   
   # REVIEWS SERVICE - manages product reviews
+    # REVIEWS SERVICE - manages product reviews
   reviews-service:
     image: reviews-service
     build:
@@ -200,6 +201,7 @@ services:
       - SPRING_CONFIG_IMPORT=${SPRING_CONFIG_IMPORT}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - FEAT_NOTIFICATIONS=${FEAT_NOTIFICATIONS}
+      - RATINGS_ENABLED=${RATINGS_ENABLED}
     depends_on:
       discovery:
         condition: service_healthy
@@ -210,7 +212,8 @@ services:
       interval: 10s
       timeout: 10s
       retries: 3
-
+    command: >
+      /bin/bash -c 'if [ "$RATINGS_ENABLED" = "true" ]; then java -jar /app/app.jar; else echo "Ratings service is disabled."; fi'
 
 networks:
   default:
