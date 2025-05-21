@@ -49,6 +49,9 @@ CREATE TABLE "order" (
     transport_company varchar(45)  NULL,
     shipping_guide varchar(100)  NULL,
     id_domiciliary varchar(36)  NULL,
+    debt real NULL,
+    lat numeric(9,6) NULL,
+    lng numeric(9,6) NULL,
     CONSTRAINT order_pk PRIMARY KEY (id_order)
 );
 
@@ -58,7 +61,6 @@ CREATE TABLE order_product (
     product_code varchar(200)  NOT NULL,
     price real  NOT NULL,
     quantity int  NOT NULL,
-    description varchar(100)  NOT NULL,
     CONSTRAINT order_product_pk PRIMARY KEY (id_order,product_code)
 );
 
@@ -104,8 +106,8 @@ CREATE TABLE product (
 -- Table: product_color
 CREATE TABLE product_color (
     product_code varchar(200)  NOT NULL,
-    color_id_color int  NOT NULL,
-    CONSTRAINT product_color_pk PRIMARY KEY (product_code,color_id_color)
+    id_color int  NOT NULL,
+    CONSTRAINT product_color_pk PRIMARY KEY (product_code,id_color)
 );
 
 -- Table: review
@@ -198,7 +200,7 @@ ALTER TABLE payment_method ADD CONSTRAINT payment_method_user
 
 -- Reference: product_color_color (table: product_color)
 ALTER TABLE product_color ADD CONSTRAINT product_color_color
-    FOREIGN KEY (color_id_color)
+    FOREIGN KEY (id_color)
     REFERENCES color (id_color)  
     NOT DEFERRABLE 
     INITIALLY IMMEDIATE
