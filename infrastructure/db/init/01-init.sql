@@ -79,7 +79,7 @@ CREATE TABLE payment_method (
     email varchar(50)  NOT NULL,
     phone varchar(15)  NOT NULL,
     expiry_date varchar(6)  NOT NULL,
-    card_hoder_name varchar(100)  NOT NULL,
+    card_holder_name varchar(100)  NOT NULL,
     city varchar(30)  NOT NULL,
     first_line varchar(100)  NOT NULL,
     second_line varchar(100)  NOT NULL,
