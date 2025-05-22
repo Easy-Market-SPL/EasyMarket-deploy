@@ -5,35 +5,37 @@ Desactivar RLS y crear tablas nuevas
 -------------------------------------
 CREATE TABLE delivery_tracking (
     user_id VARCHAR PRIMARY KEY,
-    latitude NUMERIC,
-    longitude NUMERIC
-);
-
-CREATE TABLE chat_messages (
-    message_id BIGINT PRIMARY KEY,
-    chat_id VARCHAR,
-    sender_type VARCHAR,
-    message TEXT,
-    message_type VARCHAR,
-    file_url TEXT,
-    created_at TIMESTAMPTZ
+    latitude NUMERIC NOT NULL,
+    longitude NUMERIC NOT NULL
 );
 
 CREATE TABLE chats (
-    chat_id VARCHAR PRIMARY KEY,
-    customer_name VARCHAR,
+    chat_id VARCHAR NOT NULL,
+    customer_name VARCHAR NOT NULL,
     sender VARCHAR,
     last_message TEXT,
     last_message_time VARCHAR,
     last_message_date VARCHAR,
     created_at TIMESTAMPTZ,
-    updated_at TIMESTAMPTZ
+    updated_at TIMESTAMPTZ,
+    CONSTRAINT chats_pk PRIMARY KEY (chat_id)
+);
+
+
+CREATE TABLE chat_messages (
+    chat_id VARCHAR NOT NULL,
+    sender_type VARCHAR NOT NULL,
+    message TEXT NULL,
+    message_type VARCHAR NULL,
+    file_url TEXT NULL,
+    created_at TIMESTAMPTZ,
+    message_id bigint GENERATED ALWAYS AS IDENTITY,
+    CONSTRAINT char_messages_pk PRIMARY KEY (message_id)
 );
 
 ALTER TABLE delivery_tracking DISABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_messages DISABLE ROW LEVEL SECURITY;
 ALTER TABLE chats DISABLE ROW LEVEL SECURITY;
-
 ALTER TABLE storage.buckets DISABLE ROW LEVEL SECURITY;
 ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY;
 
